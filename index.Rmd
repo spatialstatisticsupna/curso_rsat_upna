@@ -1,0 +1,71 @@
+---
+title: 'rsat: handling multi-satellite images in R'
+author: "U Pérez - Goya, M Montesino - SanMartin, A F Militino, and M D Ugarte"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+  pdf_document: default
+  word_document: default
+documentclass: book
+allow_html_dependencies: true
+always_allow_html: true
+bibliography: [book.bib, packages.bib]
+biblio-style: apalike
+link-citations: yes
+description: ''
+site: bookdown::bookdown_site
+---
+
+# Warn-Up
+
+Package `rsat` provides tools for searching, managing, and processing, multi-satellite and multi-spectral data.
+
+The `rsat` package is loaded by
+
+```{r}
+library(rsat)
+```
+
+The packages introduces two new R objects: `record` and `rtoi`. \#\# Instalation
+
+```{r eval=FALSE}
+# Install devtools package from cran repository
+install.packages("devtools")
+
+# load devtools library
+library(devtools)
+
+# Install RGISTools from GitHub repositoy
+install_github("spatialstatisticsupna/rsat")
+```
+
+### Dependencies for linux
+
+The package depends on some R packages that in Linux requires the installation of some libraries before the installation in R. Here you have the command to install all the applications from repository for Debian/Ubuntu and RedHat/Fedora.
+
+#### Debian/Ubuntu
+
+        sudo apt update
+        sudo apt install r-cran-rcpp gdal-bin libgdal-dev libproj-dev libssl libssl-dev xml2 libxml2-dev libmagick++-dev
+
+#### RedHat/Fedora
+
+        sudo dnf install gdal gdal_devel proj_devel xml2 libxml2_devel libcurl_devel openssl_devel ImageMagick-c++_devel
+
+## Sing Up credentials
+
+The package can search images in different APIs. The support for multiple APIs requires multiple credentials.
+
+### Modis
+
+Credentials [EarthData](https://ers.cr.usgs.gov/register/)
+
+### Landsat
+
+Credentials [EarthData](https://ers.cr.usgs.gov/register/)
+
+### Sentinel
+
+Credentials [SciHub](https://scihub.copernicus.eu/dhus/#/self-registration)
