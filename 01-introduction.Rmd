@@ -48,7 +48,7 @@ If you are using Linux, you need to install some additional libraries before ins
 
 ------------------------------------------------------------------------
 
-## Multispetral images {#theory-images}
+## Multi-spectral images {#theory-images}
 
 As mentioned earlier, `rsat` allows you to access and process ***optical satellite images*** (for now). We focus on this type of images because it is perhaps one of the most popular data products. It has proven to be a very valuable source of information in many fields such as ecology, agronomy, hydrology, or economic sciences. Note that satellites can provide several other data products beyond multispectral images, e.g. aerosol or atmospheric gas concentrations, digital elevation models (DEMs), etc.
 
@@ -76,59 +76,7 @@ Programs can develop one or several ***missions*** and, for each mission, agenci
 
 Missions are accomplished by ***satellites*** which carry specific ***sensors*** or instruments for the task. When several satellites are devoted to a single mission they are referred to as ***constellations***. For instance, the Terra and Aqua satellites from the constellation of the MODIS mission. A list of on-going governmental programs and their missions, satellites, and sensors can be found below.
 
-### Web services
-
-Information collected from satellites is saved in repositories which can be freely accessed using ***web services***. Web services work as an interface between the user and the data repositories, finding and retrieving the requested data-sets to the user. In order to obtain multispectral images from the three programs, sign-up in the following web services (for convenience, try to use the same *username* and *password* for all of them):
-
--   **EarthData** : [\<https://urs.earthdata.nasa.gov/users/new\>](https://urs.earthdata.nasa.gov/users/new){.uri}
-
--   **Scihub** : [\<https://scihub.copernicus.eu/dhus/\#/self-registration\>](https://scihub.copernicus.eu/dhus/#/self-registration){.uri}
-
--   **EarthExplorer** (optional): [\<https://ers.cr.usgs.gov/register\>](https://ers.cr.usgs.gov/register){.uri}
-
-#### Demo \#1: MODIS download using the GUI of EarthExplorer
-
-Web services offer online portals to request remote sensing products via *Graphical User Interfaces (GUI)*. We will conduct a small demonstration using *EarthExplorer's* GUI to find MODIS images covering Navarre between `03/05/2019` and `05/05/2019`. In our jargon, Navarre is referred to as ***Region of Interest (ROI)*** and the time-span is our ***Time of Interest (TOI)***.
-
-1.  Go [here](https://ers.cr.usgs.gov/login) and log-in. The web page sends you to a new site. The website displays a menu on the left and a map on the right. Search Navarre on the map. Pick the polygon tab on the menu and draw a polygon around the region (see the gif below). Fill-in the starting and ending dates in the appropriate field of the form (at the bottom). Then click the *Data Sets* button.
-
-    ![](imgs/ee_modis_navarre.gif)
-
-2.  Select the data product on the panel on your left. Find for instance the *MOD09GA* product (we explain below what this is) expanding the menu under *NASA LPDAAC Collections*. Then click on *MODIS Land Surface Reflectance V6*. Pick the *MOD09GA* product and click on *Results.* A pop-up message appears indicating the system is searching the available images.
-
-    ![](imgs/ee_modis_navarre2.gif)
-
-3.  The results are displayed on the left. You should see three results (one image for each day). You could download the image by clicking on the icon with a green arrow pointing downwards, and then repeat the process with every image in the list.
-
-    ![](imgs/ee_modis_navarre3.gif)
-
-Data portals are straightforward and intuitive. However, they can be tedious when requesting images for longer periods of time or several data products. In these situations, `rsat` becomes handy. The package enables you to send requests from `R` to the appropriate web service easily and programatically using *Application Programming Interfaces (APIs)*. You will be able to judge yourself at the end of this chapter where the same example is repeated using `rsat`.
-
 ### Data products
-
-#### Names
-
-As mentioned earlier, these tutorial mostly concern ***optical multispectral images*** capturing ***surface reflectance*** values (`rsat` gives access to products with other levels of pre-processing). Web services name their products using short-names or ***ID**s*. The product names for the on-going missions are listed below. We rely on `rsat`'s manual and tables like the one below to remember the *IDs* of each data product. After a while you will learn them by heart.
-
-```{r data_table, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
-library(pander)
-data <- "
-  Program    | Mission    | Satellite | Sensor | ID             
-  Landsat    | Landsat-7  | Landsat-7 | ETM    | Landsat_ETM_C1
-  Landsat    | Landsat-8  | Landsat-8 | OLI    | Landsat_8_C1
-  MODIS      | MODIS      | Terra     | MODIS  | MOD09GA
-  MODIS      | MODIS      | Aqua      | MODIS  | MYD09GA
-  Copernicus | Sentinel-2 | 2A        | MSI    | S2MSI2A
-  Copernicus | Sentinel-2 | 2B        | MSI    | S2MSI2A
-  Copernicus | Sentinel-3 | 3A        | OLCY   | SY_SYN__
-  Copernicus | Sentinel-3 | 3B        | OLCY   | SY_SYN__
-"
-df <- read.delim(textConnection(data),header=FALSE,sep="|",strip.white=TRUE,stringsAsFactors=FALSE)
-names(df) <- unname(as.list(df[1,]))
-df <- df[-1,]
-row.names(df)<-NULL
-pander(df, style = 'rmarkdown', caption = "Operational missions collecting multi-spectral satellite images and their relevant details")
-```
 
 #### Tiling systems
 
@@ -162,15 +110,67 @@ tm_shape(modis_tiles) + tm_polygons(alpha = 0, border.col = "red")
 
 The orbit and sensors of satellites/constellations provide images of different resolutions (in its broadest sense). Here, the term ***resolution*** refers to the level of detail in some aspect of the image:
 
--   ***Spatial resolution*** is related to the area covered by a single pixel. High-resolution images contain small pixels, i.e. they cover small surface areas. Among the missions mentioned before, Sentinel-2 is the one offering images with the highest resolution ( $\sim 10\times10m$ per pixels).
+-   ***Spatial resolution*** is related to the area covered by a single pixel. High-resolution images contain small pixels, i.e. they cover small surface areas. Among the missions mentioned before, Sentinel-2 is the one offering images with the highest resolution ( $\sim 10\times 10m$ per pixels).
 
 -   ***Temporal resolution*** is related to the time span between two successive images. When images are frequent, they provide a high temporal resolution. For instance, MODIS Terra and Aqua revisit daily so it the program with the highest temporal resolution. Another aspect to consider is the temporal extension of data products. Because satellites are launched and decommissioned, their associated products are available for a limited period of time.
 
 -   The **spectral resolution** corresponds to the number of bands and their wavelength range. The MODIS sensor, with its $36$ bands in total, is the sensor with the highest spectral resolution.
 
-    ![Spectral bands for several satellte missions (Landsat 7/8, MODIS, Sentinel-2)](imgs/bands_missions.png "Spectral bands for several satellte missions (Landsat 7/8, MODIS, Sentinel-2)"){width="485" height="223"}
+    ![Spectral bands for several satellte missions (Landsat 7/8, MODIS, Sentinel-2). Source: USGS](imgs/bands_missions.png "Spectral bands for several satellte missions (Landsat 7/8, MODIS, Sentinel-2). Source: USGS"){width="429"}
 
-Selecting the right product depends on the objective of the study and the extension of the *ROI*. The features of different missions and satellites are collected into a single look-up table [here](https://drive.google.com/file/d/1cSw4LaTLPlGBHmG8v7uwH54f-m9jZz1N/view?usp=sharing).
+Selecting the right product depends on the objective of the study and the extension of the *ROI*. The features of different missions and satellites are collected into a single look-up table [here](https://drive.google.com/file/d/1cSw4LaTLPlGBHmG8v7uwH54f-m9jZz1N/view?usp=sharing). Web services
+
+#### Names
+
+As mentioned earlier, these tutorial mostly concern ***multispectral images*** capturing ***surface reflectance*** values (`rsat` gives access to products with other levels of pre-processing). Short-names or ***ID**s* identify the data products . The product names for the on-going missions are listed below. We rely on `rsat`'s manual and tables like the one below to remember the *IDs* of each data product. After a while you will learn them by heart.
+
+```{r data_table, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+library(pander)
+data <- "
+  Program    | Mission    | Satellite | Sensor | ID             
+  Landsat    | Landsat-7  | Landsat-7 | ETM    | Landsat_ETM_C1
+  Landsat    | Landsat-8  | Landsat-8 | OLI    | Landsat_8_C1
+  MODIS      | MODIS      | Terra     | MODIS  | MOD09GA
+  MODIS      | MODIS      | Aqua      | MODIS  | MYD09GA
+  Copernicus | Sentinel-2 | 2A        | MSI    | S2MSI2A
+  Copernicus | Sentinel-2 | 2B        | MSI    | S2MSI2A
+  Copernicus | Sentinel-3 | 3A        | OLCY   | SY_SYN__
+  Copernicus | Sentinel-3 | 3B        | OLCY   | SY_SYN__
+"
+df <- read.delim(textConnection(data),header=FALSE,sep="|",strip.white=TRUE,stringsAsFactors=FALSE)
+names(df) <- unname(as.list(df[1,]))
+df <- df[-1,]
+row.names(df)<-NULL
+pander(df, style = 'rmarkdown', caption = "Operational missions collecting multi-spectral satellite images and their relevant details")
+```
+
+### Web services
+
+Information collected from satellites is saved in repositories which can be freely accessed using ***web services***. Web services work as an interface between the user and the data repositories, finding and retrieving the requested data-sets to the user. In order to obtain multispectral images from the three programs, sign-up in the following web services. For convenience, try to use the same *username* and *password* for all of them. To satisfy the criteria of all web services make sure that the *username* is $4$ characters long and includes a period, number or underscore. The password must be $12$ character long and use characters (at least one capital letter) and numbers:
+
+-   **EarthData** : [\<https://urs.earthdata.nasa.gov/users/new\>](https://urs.earthdata.nasa.gov/users/new){.uri}
+
+-   **Scihub** : [\<https://scihub.copernicus.eu/dhus/\#/self-registration\>](https://scihub.copernicus.eu/dhus/#/self-registration){.uri}
+
+-   **EarthExplorer**: [\<https://ers.cr.usgs.gov/register\>](https://ers.cr.usgs.gov/register){.uri}
+
+#### Demo \#1: MODIS download using the EarthExplorer portal
+
+Web services offer online portals to request remote sensing products via *Graphical User Interfaces (GUI)*. We will conduct a small demonstration using *EarthExplorer's* GUI to find MODIS images covering Navarre between `03/05/2019` and `05/05/2019`. In our jargon, Navarre is referred to as ***Region of Interest (ROI)*** and the time-span is our ***Time of Interest (TOI)***.
+
+1.  Go [here](https://earthexplorer.usgs.gov/) and log-in. The web page sends you to a new site. The website displays a menu on the left and a map on the right. Search Navarre on the map. Pick the polygon tab on the menu and draw a polygon around the region (see the gif below). Fill-in the starting and ending dates in the appropriate field of the form (at the bottom). Then click the *Data Sets* button.
+
+    ![](imgs/ee_modis_navarre.gif)
+
+2.  Select the data product on the panel on your left. Find for instance the *MOD09GA* product (we explain below what this is) expanding the menu under *NASA LPDAAC Collections*. Then click on *MODIS Land Surface Reflectance V6*. Pick the *MOD09GA* product and click on *Results.* A pop-up message appears indicating the system is searching the available images.
+
+    ![](imgs/ee_modis_navarre2.gif)
+
+3.  The results are displayed on the left. You should see three results (one image for each day). You could download the image by clicking on the icon with a green arrow pointing downwards, and then repeat the process with every image in the list.
+
+    ![](imgs/ee_modis_navarre3.gif)
+
+Data portals are straightforward and intuitive. However, they can be tedious when requesting images for longer periods of time or several data products. In these situations, `rsat` becomes handy. The package enables you to send requests from `R` to the appropriate web service easily and programatically using *Application Programming Interfaces (APIs)*. You can judge in the next section where the same example is repeated using `rsat`.
 
 ## `rsat`: Quick walkthrough
 
@@ -200,7 +200,7 @@ set_credentials("rsat.package", "UpnaSSG.2021")
 
 ### Region and time of interest: `rtoi`
 
-The next step is to define the region and time of interest, which in `rsat` is an `rtoi` class object (`S6`). An `rtoi` (which sounds like `R` toy) contains all the relevant information regarding a specific remote sensing analysis. To initialize an `rtoi`, it is enough to define; (1) the region, (2) a computer path to save the raw data, and (3) another computer path to save the processed data.
+The next step is to define the region and time of interest, which in `rsat` is an `rtoi` class object (`S6`). An `rtoi` (which sounds like `R` toy) contains all the relevant information regarding a specific remote sensing analysis. To initialize an `rtoi`, it is enough to define; (1) the region, (2) a path to save the raw data, and (3) another path to save the processed data.
 
 In this walkthrough, the study region is available in `rsat`. The variable `ex.navarre` is a geo-referenced polygon of the region (`sf` class object). In future lessons, you will learn how to specify your own location. To load the polygon type;
 
@@ -214,7 +214,7 @@ Our paths are `db.path` and `rtoi.path` for saving the raw and the processed dat
 # path for the database
 db.path <- file.path("Z:/CursoRSAT/DATABASE")
 # path where r
-rtoi.path<-file.path("Z:/CursoRSAT/regions")
+rtoi.path <- file.path("Z:/CursoRSAT/regions")
 # create the folder for the database
 dir.create(db.path, recursive = TRUE)
 ```
@@ -227,10 +227,6 @@ navarre <- new_rtoi(name = "Navarre",
                     region = ex.navarre,
                     db_path = db.path,
                     rtoi_path = rtoi.path)
-```
-
-```{r echo=FALSE}
-navarre <- read_rtoi("Z:/CursoRSAT/regions/Navarre")
 ```
 
 ### Search
@@ -282,7 +278,7 @@ unlink("Z:/CursoRSAT/regions/Navarre",recursive = TRUE)
 
 ## Exercise
 
-Your turn: We want you to search ([***do not download!***]{.ul}) the multispectral images captured by Landsat-8 (`"LANDSAT_8_C1"`), Sentinel-2 (`"S2MSI"`) and MODIS (`"mod09ga"`) in Navarre during May $2019$. Try to do it with one single `sat_search()` instruction. Use [***your own credentials***]{.ul} to check your access to the different data portals.
+Your turn: We want you to search ([***do not download!***]{.ul}) the multispectral images captured by Landsat-8 (`"LANDSAT_8_C1"`), Sentinel-2 (`"S2MSI2A"`) and MODIS (`"mod09ga"`) in Navarre during May $2019$. Try to do it with one single `sat_search()` instruction. Use [***your own credentials***]{.ul} to check your access to the different data portals.
 
 ```{r, eval=FALSE, echo=FALSE}
 
