@@ -254,7 +254,7 @@ plot(galicia.records[2], region=galicia, tm.polygon.region.border.col="red")
 
 ## Exercise
 
-Your turn: We want you to search ([***do not download!***]{.ul}) a cloud-free multispectral images captured by Landsat-8 (`"LANDSAT_8_C1"`) and Sentinel-2 (`"S2MSI"`) in Andorra during all $2020$. Try to do it with one single `sat_search()` instruction and use `plot()` for plotting the images. Use [***your own credentials***]{.ul}.
+Your turn: We want you to search ([***do not download!***]{.ul}) a cloud-free multispectral images captured by Landsat-8 (`"LANDSAT_8_C1"`) and Sentinel-2 (`"S2MSI2A"`) in Andorra during all $2020$. Try to do it with one single `sat_search()` instruction and use `plot()` for plotting the images. Use [***your own credentials***]{.ul}.
 
 ```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
 #TODO complete the exercise here
