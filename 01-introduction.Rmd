@@ -2,7 +2,7 @@ The aim of this document is to show how to handle **multispectral imagery** in `
 
 i.  **Introduction** - theory about multispectral images, data types and their organization.
 ii. **Tinkering with satellite `records`** - standardizing and filtering image metadata.
-iii. **Managing your `rtoi`**  - building your region and time of interest.
+iii. **Managing your `rtoi`** - building your region and time of interest.
 iv. **Basic processing** - customizing images for the objectives of the study.
 v.  **More advance processing** - completing and harmonizing multi-source data sets.
 
@@ -217,6 +217,7 @@ db.path <- file.path("Z:/CursoRSAT/DATABASE")
 rtoi.path <- file.path("Z:/CursoRSAT/regions")
 # create the folder for the database
 dir.create(db.path, recursive = TRUE)
+dir.create(rtoi.path, recursive = TRUE)
 ```
 
 To create an `rtoi` use the function `new_rtoi()` as follows:
