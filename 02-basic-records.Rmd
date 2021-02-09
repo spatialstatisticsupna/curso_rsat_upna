@@ -1,0 +1,261 @@
+# Tinkering with satellite records - standardizing and filtering image metadata.
+
+Searching, filtering, and downloading are the basic operations needed for creating your own satellite imagery data set. There are multiple libraries and applications for searching and downloading satellite images, but most of them follow the same two processes:
+
+1.  Search: taking at least a region and time and of interest
+
+2.  Download: acquiring all the images filtered by arguments such as "cloud percentage" but without visualization.
+
+Usually this processes works as a black box, but previewing as a prior step to download is an important operation to discard images very affected by atmospheric factors. Landsat, MODIS, and Sentinel programs provide a web application to preview the images on maps before the download but, the one-by-one visualization using the graphic user interface requires some minutes for each date.
+
+The `rsat` package introduces a new previewing procedure based on `R` and the metadata of the satellite images. The preview is designed to speed up and improve the data filtering using `R` commands. Additionally, this faster previewing helps discarding scenes before download therefore gaining time and hard drive space in your computer.
+
+The procedure computationally requires a dedicated data structure to manage the metadata of satellite imagery. The designed data structure is the `records`. This data structure contains all the metadata of an image, such as; name of the satellite, name of the image, capturing date, product name, spatial extension or the url to acquire the previewing image. The following table shows all the slots in a `records`.
+
+```{r table-simple, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+require(pander)
+panderOptions('table.split.table', Inf)
+set.caption("The parameters in records and its description")
+my.data <- "
+  Slot name | Data type | Description    
+  sat      | character | Stores the satellite name: Modis, Landsat, Sentinel-1, Sentinel-2, ...
+  name      | character | Stores the name of the tile used by its program, for example one of the Modis image name is MOD09GA.A2019123.h17v04.006.2019125233112
+  
+  date      | Date | Observation date
+  product      | character | Name of the product, 
+  path      | numeric | in Modis and Landsat images, the path of the tile, otherwise is null
+  row      | numeric | in Modis and Landsat images, the row of the tile, otherwise is null
+  tileid      | character | in Sentinel images, the tile id
+  download      | character | The url where the image is avaliable for download
+  file_path      | character | The relativa path for local store of the image
+  preview      | character | The url of a preview image, usually jpeg image
+  api_name      | character | The internal api name used by rsat
+  order      | logical | Logical argument, if TRUE the image need to be ordered before the download
+  extent_crs      |  extent_crs |  crs data for adding projection to preview images "
+df <- read.delim(textConnection(my.data),header=FALSE,sep="|",strip.white=TRUE,stringsAsFactors=FALSE)
+names(df) <- unname(as.list(df[1,])) # put headers on
+df <- df[-1,] # remove first row
+row.names(df)<-NULL
+pander(df, style = 'rmarkdown')
+```
+
+Create a `records` variable from scratch is a hard job, it is necessary to known all the parameters in advance. To ease this procedure, the packages defines a searching function that produces a set of records containing the metadata of all the images in the search result. This procedure searches the images based in a time of interest and a region of interest.
+
+## Set up `records` class
+
+The easiest way to create a `records` class is using `sat_search` function. This function its able to call to different APIs to get satellite metadata as `records`.
+
+```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
+library(rsat)
+
+# set API credentials
+set_credentials("rsat.package", "UpnaSSG.2021")
+```
+
+`sat_search` function takes some parameters for searching satellite records from multiple APIs. It needs at least an spatial region, the product and a date interval. The region is defined with a spatial feature (`sf`) and the time with `Date` class.
+
+```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
+data("ex.manhattan")
+plot(ex.manhattan)
+class(ex.manhattan)
+toi <- as.Date("2020-01-01") + 0:385
+```
+
+```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
+# search in the APIs
+search.records <- sat_search(region = ex.manhattan,
+                             product = c("S2MSI2A","LANDSAT_8_C1"),
+                             dates = toi)
+class(search.records)
+```
+
+### Basic operations with `records`
+
+The main benefit of use this package for managing satellite imagery is work with huge amount of image metadata before the downloading process. Once you create a `records` with the satellite images you need, the package provides functions for sorting, previewing and filtering the data.
+
+`records` class takes as reference R object vector. `vector` class provides simple but powerful operations as `c`, `subset`, `length`, `print`, etc.
+
+```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
+#TODO vector use in R
+```
+
+**Exercise:** without using the function `as.Date` create an R vector that contains the dates that appear at least 2 times in `my.dates1`, `my.dates2` and `my.dates3`.
+
+1.  How many dates are the 3 dates variables?
+
+```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
+my.dates1 <- as.Date("2020-01-01") + 0:31
+my.dates2 <- as.Date("2020-02-01") + 0:29
+my.dates3 <- as.Date("2020-03-01") + 0:31
+
+#TODO complete the exercise here
+```
+
+The `records` class uses the same functions to manage the images before the download.
+
+```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
+length(search.records)
+```
+
+```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
+dates(search.records[1:10])
+names(search.records[1:10])
+print(search.records[1])
+```
+
+### Plotting and previewing records
+
+```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
+plot(search.records[5])
+
+library(tmap)
+plot(search.records[5])+tm_shape(ex.manhattan)+tm_polygons(col="grey", border.col="red")
+
+#plot(search.records[1:5])+tm_shape(ex.manhattan)+tm_polygons(col="grey", border.col="red")
+
+plot(search.records[1:5],
+     region=ex.manhattan,
+     tm.polygon.region.border.col="red",
+     tm.polygon.region.col="grey",
+     tm.polygon.region.alpha=1,
+     compass.rm=T,
+     scale.bar.rm=T)
+```
+
+![Landsat and Sentinel-2 constellation capture based on orbit](imgs/orbit_landsat-sentinel.gif "Landsat with Sentinel - Global Coverage"){width="682"}
+
+#### Exercise
+
+Select and plot 5 cloud-free images from `search.records` in manhattan.
+
+```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
+#TODO complete the exercise here
+```
+
+## Filtering `records` before the download
+
+The objective of this example is to download an image from Landsat-8 and an image from Sentinel-2 of the same date and cloud free for Manhattan.
+
+### Using `subset` function
+
+Split Landsat and Sentinel images from `search.records` using `subset`.
+
+```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
+print(unique(sat_name(search.records)))
+
+landsat8 <- subset(search.records,"Landsat-8","sat")
+sentinel2 <- subset(search.records,"Sentinel-2","sat")
+```
+
+### Using vector-like operations for filtering
+
+```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
+length(search.records)
+length(landsat8)
+length(sentinel2)
+
+dates(landsat8)[dates(landsat8) %in% dates(sentinel2)]
+
+landsat8.match <- landsat8[dates(landsat8) %in% dates(sentinel2)]
+sentinel2.match <- sentinel2[dates(sentinel2) %in% dates(landsat8.match)]
+length(landsat8.match)
+length(sentinel2.match)
+```
+
+```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
+length(landsat8.match)
+
+length(sentinel2.match)
+
+plot(landsat8.match[1:10])
+
+
+landsat8.match[5]
+rm.tile <- subset(landsat8.match,14,"path")
+rm.tile <- subset(rm.tile,31,"row")
+landsat8.match <- landsat8.match[!names(landsat8.match)%in%names(rm.tile)]
+```
+
+```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
+plot(landsat8.match[1:10])
+landsat8.cloud.free <- landsat8.match[c(1,3,7,10)]
+
+plot(landsat8.match[11:19])
+landsat8.cloud.free <- c(landsat8.cloud.free,landsat8.match[c(17,19)])
+
+plot(landsat8.cloud.free)
+landsat8.cloud.free <- landsat8.cloud.free[c(1,2,3,4,6)]
+```
+
+```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
+# filter sentinel
+sentinel2.cloud.free <- sentinel2.match[dates(sentinel2.match)%in%dates(landsat8.cloud.free)]
+
+july6 <- dates(sentinel2.cloud.free)[1]
+landsat8.july6 <-landsat8.cloud.free[dates(landsat8.cloud.free)%in%july6]
+sentinel2.july6 <-sentinel2.cloud.free[dates(sentinel2.cloud.free)%in%july6]
+
+# plotting same date for landsat and sentinel
+plot(c(landsat8.july6,sentinel2.july6))
+```
+
+## Downloading
+
+The download is done the same as with the `rtoi` class, using `download` function.
+
+```{r, cache=FALSE ,eval=TRUE, cache.path="cache/"}
+out.dir="Z:/CursoRSAT/DATABASE"
+july6.records <- c(landsat8.july6, sentinel2.july6)
+download(july6.records, out.dir=out.dir)
+```
+
+## Searching a region from scratch
+
+The `rsat` package has been designed to match with `sf`, `raster`, `tmap` packages and create an ecosystem for satellite image processing. In this section we introduce an example of a download of region from scratch. \#\#\# `raster` package The package `raster` within its functions provides the access for all the world countries and regions. This function is `getData`. With this function we can get regions in spatial points (`sp`) class.
+
+```{r, cache=FALSE ,eval=TRUE, cache.path="cache/"}
+library(raster)
+spain<-getData('GADM', country='Spain',path="Z:/CursoRSAT/countries",level=2)
+plot(spain)
+```
+
+### `sp` vs `sf`
+
+`sf` package is called to be the replacement of `sp` package, but up to now both packages are complementary. Many actual packages and functions continues using `sp` as main spatial reference, for example the `getData` function.
+
+```{r, cache=FALSE ,eval=TRUE, cache.path="cache/"}
+names(spain)
+unique(spain$NAME_0)
+unique(spain$NAME_1)
+unique(spain$NAME_2)
+galicia<-spain[spain$NAME_1=="Galicia",]
+plot(galicia)
+```
+
+The conversion from `sp` to `sf` can be done easily with only one function `st_as_sf`.
+
+```{r, cache=FALSE ,eval=TRUE, cache.path="cache/"}
+class(galicia)
+galicia<-st_as_sf(galicia)
+plot(galicia)
+class(galicia)
+```
+
+### `sat_search`
+
+Once with translate from `sp` to `sf` we can use `sat_search` as we use in the previous example for searching the tiles over our region of interest and out time of interest.
+
+```{r, cache=FALSE ,eval=TRUE, cache.path="cache/"}
+galicia.records <- sat_search(region = galicia,
+                              product = "LANDSAT_8_C1",
+                              dates = as.Date("2020-01-01")+c(0,15))
+plot(galicia.records[2], region=galicia, tm.polygon.region.border.col="red")
+```
+
+## Exercise
+
+Your turn: We want you to search ([***do not download!***]{.ul}) a cloud-free multispectral images captured by Landsat-8 (`"LANDSAT_8_C1"`) and Sentinel-2 (`"S2MSI"`) in Andorra during all $2020$. Try to do it with one single `sat_search()` instruction and use `plot()` for plotting the images. Use [***your own credentials***]{.ul}.
+
+```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
+#TODO complete the exercise here
+```
