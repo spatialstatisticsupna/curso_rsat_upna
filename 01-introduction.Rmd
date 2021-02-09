@@ -208,7 +208,7 @@ In this walkthrough, the study region is available in `rsat`. The variable `ex.n
 data("ex.navarre")
 ```
 
-Our paths are `db.path` and `rtoi.path` for saving the raw and the processed datasets
+Our paths are `db.path` and `rtoi.path` for saving the raw and the processed data sets:
 
 ```{r warning=FALSE, cache=TRUE, cache.path="cache/"}
 # path for the database
