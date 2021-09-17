@@ -128,8 +128,8 @@ As mentioned earlier, these tutorial mostly concern ***multispectral images*** c
 library(pander)
 data <- "
   Program    | Mission    | Satellite | Sensor | ID             
-  Landsat    | Landsat-7  | Landsat-7 | ETM    | Landsat_ETM_C1
-  Landsat    | Landsat-8  | Landsat-8 | OLI    | Landsat_8_C1
+  Landsat    | Landsat-7  | Landsat-7 | ETM    | LANDSAT_ETM_C1
+  Landsat    | Landsat-8  | Landsat-8 | OLI    | LANDSAT_8_C1
   MODIS      | MODIS      | Terra     | MODIS  | MOD09GA
   MODIS      | MODIS      | Aqua      | MODIS  | MYD09GA
   Copernicus | Sentinel-2 | 2A        | MSI    | S2MSI2A
