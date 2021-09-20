@@ -27,7 +27,7 @@ my.data <- "
   row      | numeric | in Modis and Landsat images, the row of the tile, otherwise is null
   tileid      | character | in Sentinel images, the tile id
   download      | character | The url where the image is avaliable for download
-  file_path      | character | The relativa path for local store of the image
+  file_path      | character | The relative path for local store of the image
   preview      | character | The url of a preview image, usually jpeg image
   api_name      | character | The internal api name used by rsat
   order      | logical | Logical argument, if TRUE the image need to be ordered before the download
@@ -39,11 +39,11 @@ row.names(df)<-NULL
 pander(df, style = 'rmarkdown')
 ```
 
-Create a `records` variable from scratch is a hard job, it is necessary to known all the parameters in advance. To ease this procedure, the packages defines a searching function that produces a set of records containing the metadata of all the images in the search result. This procedure searches the images based in a time of interest and a region of interest.
+Creating a `records` variable from scratch is a hard job, it is necessary to known all the parameters in advance. To ease this procedure, the packages defines a searching function that produces a set of records containing the metadata of all the images in the search result. This procedure searches the images based in a time of interest and a region of interest.
 
 ## Set up `records` class
 
-The easiest way to create a `records` class is using `sat_search` function. This function its able to call to different APIs to get satellite metadata as `records`.
+The easiest way to create a `records` class is using `rsat_search` function. This function is able to call to different APIs to get satellite metadata as `records`.
 
 ```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
 library(rsat)
@@ -52,7 +52,7 @@ library(rsat)
 set_credentials("rsat.package", "UpnaSSG.2021")
 ```
 
-`sat_search` function takes some parameters for searching satellite records from multiple APIs. It needs at least an spatial region, the product and a date interval. The region is defined with a spatial feature (`sf`) and the time with `Date` class.
+`rsat_search` function takes some parameters for searching satellite records from multiple APIs. It needs at least an spatial region, the product and a date interval. The region is defined with a spatial feature (`sf`) and the time with `Date` class.
 
 ```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
 data("ex.manhattan")
@@ -63,7 +63,7 @@ toi <- as.Date("2020-01-01") + 0:385
 
 ```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
 # search in the APIs
-search.records <- sat_search(region = ex.manhattan,
+search.records <- rsat_search(region = ex.manhattan,
                              product = c("S2MSI2A","LANDSAT_8_C1"),
                              dates = toi)
 class(search.records)
@@ -71,9 +71,9 @@ class(search.records)
 
 ### Basic operations with `records`
 
-The main benefit of use this package for managing satellite imagery is work with huge amount of image metadata before the downloading process. Once you create a `records` with the satellite images you need, the package provides functions for sorting, previewing and filtering the data.
+The main benefit of using this package for managing satellite imagery is that it works with huge amount of image metadata before the downloading process. Once you create a `records` with the satellite images you need, the package provides functions for sorting, previewing and filtering the data.
 
-`records` class takes as reference R object vector. `vector` class provides simple but powerful operations as `c`, `subset`, `length`, `print`, etc.
+`records` class takes the R vector object as reference. `vector` class provides simple but powerful operations such as `c`, `subset`, `length`, `print`, etc.
 
 ```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
 #TODO vector use in R
@@ -89,12 +89,15 @@ my.dates2 <- as.Date("2020-02-01") + 0:29
 my.dates3 <- as.Date("2020-03-01") + 0:31
 
 #TODO complete the exercise here
+
+c(my.dates1[length(my.dates1)],my.dates2[length(my.dates2)])
 ```
 
 The `records` class uses the same functions to manage the images before the download.
 
 ```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
 length(search.records)
+plot(search.records[1:2])
 ```
 
 ```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
@@ -143,8 +146,8 @@ Split Landsat and Sentinel images from `search.records` using `subset`.
 ```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
 print(unique(sat_name(search.records)))
 
-landsat8 <- subset(search.records,"Landsat-8","sat")
-sentinel2 <- subset(search.records,"Sentinel-2","sat")
+landsat8 <- subset(search.records,"Landsat-8",subset = "sat")
+sentinel2 <- subset(search.records,"Sentinel-2",subset = "sat")
 ```
 
 ### Using vector-like operations for filtering
@@ -171,8 +174,8 @@ plot(landsat8.match[1:10])
 
 
 landsat8.match[5]
-rm.tile <- subset(landsat8.match,14,"path")
-rm.tile <- subset(rm.tile,31,"row")
+rm.tile <- subset(landsat8.match,14,subset = "path")
+rm.tile <- subset(rm.tile,31,subset = "row")
 landsat8.match <- landsat8.match[!names(landsat8.match)%in%names(rm.tile)]
 ```
 
@@ -201,12 +204,12 @@ plot(c(landsat8.july6,sentinel2.july6))
 
 ## Downloading
 
-The download is done the same as with the `rtoi` class, using `download` function.
+The download is done the same as with the `rtoi` class, using `rsat_download` function.
 
 ```{r, cache=FALSE ,eval=TRUE, cache.path="cache/"}
-out.dir="Z:/CursoRSAT/DATABASE"
+out.dir="D:/CursoRSAT/DATABASE"
 july6.records <- c(landsat8.july6, sentinel2.july6)
-download(july6.records, out.dir=out.dir)
+rsat_download(july6.records, out.dir=out.dir)
 ```
 
 ## Searching a region from scratch
@@ -215,13 +218,13 @@ The `rsat` package has been designed to match with `sf`, `raster`, `tmap` packag
 
 ```{r, cache=FALSE ,eval=TRUE, cache.path="cache/"}
 library(raster)
-spain<-getData('GADM', country='Spain',path="Z:/CursoRSAT/countries",level=2)
+spain<-getData('GADM', country='Spain',path="D:/rsat/CursoRSAT/countries",level=2)
 plot(spain)
 ```
 
 ### `sp` vs `sf`
 
-`sf` package is called to be the replacement of `sp` package, but up to now both packages are complementary. Many actual packages and functions continues using `sp` as main spatial reference, for example the `getData` function.
+`sf` package is called to be the replacement of `sp` package, but up to now both packages are complementary. Many actual packages and functions continue using `sp` as main spatial reference, for example the `getData` function.
 
 ```{r, cache=FALSE ,eval=TRUE, cache.path="cache/"}
 names(spain)
@@ -241,12 +244,12 @@ plot(galicia)
 class(galicia)
 ```
 
-### `sat_search`
+### `rsat_search`
 
-Once with translate from `sp` to `sf` we can use `sat_search` as we use in the previous example for searching the tiles over our region of interest and out time of interest.
+Once with translate from `sp` to `sf` we can use `rsat_search` as we use in the previous example for searching the tiles over our region of interest and out time of interest.
 
 ```{r, cache=FALSE ,eval=TRUE, cache.path="cache/"}
-galicia.records <- sat_search(region = galicia,
+galicia.records <- rsat_search(region = galicia,
                               product = "LANDSAT_8_C1",
                               dates = as.Date("2020-01-01")+c(0,15))
 plot(galicia.records[2], region=galicia, tm.polygon.region.border.col="red")

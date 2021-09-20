@@ -39,7 +39,7 @@ Our analysis will be based on the region of Madrid (Comunidad de Madrid). To obt
 
 ```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
 library(raster)
-spain<-getData('GADM', country='Spain',path="Z:/CursoRSAT/countries",level=2)
+spain<-getData('GADM', country='Spain',path="D:/rsat/CursoRSAT/countries",level=2)
 plot(spain)
 unique(spain$NAME_1)
 madrid.sp<-spain[spain$NAME_1=="Comunidad de Madrid",]
@@ -54,7 +54,7 @@ Let's see what we get if we do a search of the region.
 search.dates <- as.Date("2020-01-01") + 0:395
 
 # search in the APIs
-search.result<-sat_search(region = madrid.sf,
+search.result<-rsat_search(region = madrid.sf,
                           product = c("S2MSI2A","LANDSAT_8_C1"),
                           dates = search.dates,
                           lvl=2)
@@ -76,13 +76,13 @@ What happens if we show all the records for one day and one product?
 
 ```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
 # plot records of one date
-sentinel2.records <- subset(search.result,"Sentinel-2","sat")
+sentinel2.records <- subset(search.result,"Sentinel-2",subset = "sat")
 
 date1 <- unique(dates(sentinel2.records))[1]
 print(date1)
 # show the number of dates
 records.date1 <- sentinel2.records[dates(sentinel2.records)%in%date1]
-plot(records.date1)
+plot(records.date1,region=madrid.sf)
 ```
 
 ## Why use an `rtoi`?
@@ -99,25 +99,26 @@ In the R environment, `rtoi` is a special object of R cataloged as object S6. Th
 
 ![The 3 parts of rtoi](imgs/rtoi_structure.png){width="322"}
 
-To create an rtoi object, 4 arguments must be used in the function new_rtoi:
+To create an `rtoi` object, 4 arguments must be used in the function new_rtoi:
 
 1.  name: the name of the region
 
 2.  region: an sf with the polygon of the region
 
-3.  rtoi_path: the path where the region will be store
+3.  rtoi_path: the path where the region will be stored
 
 4.  db_path: the path where the images will be stored in their original form.
 
 ```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
-dir.create("E:/regions")
-dir.create("Z:/DATABASE")
-madrid <- new_rtoi("madrid",ex.madrid,"E:/regions","Z:/DATABASE")
+dir.create("D:/rsat/regions")
+dir.create("D:/rsat/DATABASE")
+madrid <-new_rtoi("madrid",madrid.sf,"D:/rsat/regions","D:/rsat/DATABASE")
 print(madrid)
 records(madrid) <- search.result
+print(madrid)
 ```
 
-Both the rtoi object and the database created by the download function use the same folder hierarchy. Folder herarchy is defined as follows:
+Both the rtoi object and the database created by the download function use the same folder hierarchy. Folder hierarchy is defined as follows:
 
     PATH/SatelliteName/Product
 
@@ -130,7 +131,7 @@ Additionally the rtoi object generates more folders to store the processed versi
 Every time we make a change on the rtoi, in addition to all the R sessions, the change has repercussions on the stored folder. This means that if at any time the R session is broken, the information is kept up to date. To be able to load the `rtoi` object again, you must use the function `read_rtoi`. This function only needs the address where the `rtoi` is located.
 
 ```{r, echo=FALSE, cache.path="cache/"}
-madrid <- read_rtoi("E:/regions/madrid")
+madrid <- read_rtoi("D:/rsat/regions/madrid")
 print(madrid)
 ```
 
@@ -154,7 +155,7 @@ plot(madrid,"preview",dates=dates(madrid)[1:9],product="S2MSI2A",compass.rm=T)
 plot(madrid,"preview",dates=dates(madrid)[1:9],product="LANDSAT_8_C1_lvl2",compass.rm=T)
 ```
 
-`rtoi` has been designed to contain images from various satellite programs. Therefore the synthesis and data visualization is very important. In that sense plot can display the relarion between dates and captures in a calendar plot.
+`rtoi` has been designed to contain images from various satellite programs. Therefore the synthesis and data visualization is very important. In that sense plot can display the relation between dates and captures in a calendar plot.
 
 ```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
 print(madrid)
@@ -171,11 +172,9 @@ plot(madrid,"preview",dates=as.Date("2020-01-17"))
 In this example we are interested in same day images in Landsat and Sentinel-2. However, `rtoi` does not allow data filtering, for these operations it relies on `records`. Therefore, we must extract the `records` and then filter them. The package defines both objects as complementary. The `records` object contains the metadata of the tiles, while the `rtoi` object manages their union to generate regions. In the following code you can see how to select the Landsat and Sentinel records that match in time.
 
 ```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
-madrid.records <- records(madrid)
-print(unique(sat_name(madrid.records)))
 
-madrid.landsat8 <- subset(madrid.records,"Landsat-8","sat")
-madrid.sentinel2 <- subset(madrid.records,"Sentinel-2","sat")
+madrid.landsat8 <- subset(records(madrid),"Landsat-8",subset = "sat")
+madrid.sentinel2 <- subset(records(madrid),"Sentinel-2",subset = "sat")
 
 dates(madrid.landsat8)[dates(madrid.landsat8) %in% dates(madrid.sentinel2)]
 
@@ -184,16 +183,16 @@ sentinel2.match <- madrid.sentinel2[dates(madrid.sentinel2) %in% dates(madrid.la
 
 records(madrid)<-c(madrid.landsat8.match,sentinel2.match)
 plot(madrid,"preview",dates=dates(madrid)[1:4],product="LANDSAT_8_C1_lvl2")
-preview(madrid,as.Date("20200211","%Y%m%d"))
+rsat_preview(madrid,as.Date("20200211","%Y%m%d"))
 ```
 
 We can select the tiles that contain the entire region of Madrid by extracting the records and using the subset function to filter the data.
 
 ```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
 madrid.records <- records(madrid)
-madrid.landsat8 <- subset(madrid.records,"Landsat-8","sat")
-madrid.landsat8 <- subset(madrid.landsat8,201,"path")
-madrid.landsat8 <- subset(madrid.landsat8,31,"row")
+madrid.landsat8 <- subset(madrid.records,"Landsat-8",subset = "sat")
+madrid.landsat8 <- subset(madrid.landsat8,201,subset = "path")
+madrid.landsat8 <- subset(madrid.landsat8,31,subset = "row")
 
 madrid.records <- madrid.records[dates(madrid.records) %in% dates(madrid.landsat8)]
 
@@ -204,15 +203,16 @@ cloud.free.dates <- dates(madrid)[c(2,5)]
 madrid.records<-madrid.records[dates(madrid.records)%in%cloud.free.dates]
 records(madrid)<-madrid.records
 plot(madrid,"preview")
+rsat_preview(madrid,as.Date("20200314","%Y%m%d"))
 ```
 
 ## Region download
 
-The download of the images with rtoi can be done with the download function. The images will be stored in the rtoi db_path address.
+The download of the images with rtoi can be done with the `rsat_download` function. The images will be stored in the rtoi db_path address.
 
 ```{r, eval=FALSE, cache=TRUE, cache.path="cache/"}
 print(madrid)
-download(madrid)
+rsat_download(madrid)
 print(madrid)
 ```
 
@@ -222,7 +222,7 @@ The `rtoi` object consists of three parts, the database address, the object load
 
 ```{r, eval=FALSE, cache=TRUE, cache.path="cache/"}
 print(madrid)
-mosaic(madrid)
+rsat_mosaic(madrid)
 print(madrid)
 ```
 
@@ -237,22 +237,22 @@ This split object structure allows to have a common repository of images (the da
 With the raster package we can obtain entire regions and countries. However, if what we want is to select an irregular region on a map, it does not allow it. To do this, we can use an additional package called mapview.
 
 ```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
-library(mapview)
+library(mapview);library(mapedit)
 my.special.region <- mapview() %>%
                      editMap()
 
 
 my.special.region <- st_as_sf(my.special.region[[1]])
 myplot<-new_rtoi("myplot",
-                 st_as_sf(what_we_created[[1]]),
-                 "E:/contries",
-                 "E:/contries")
+                 st_as_sf(what_we_created),
+                 "D:/aplicaciones/rsat/cursoRSAT/contries",
+                 "D:/apliciones/rstat/cursoRSAT/contries")
 
-sat_search(myplot,
+rsat_search(myplot,
            "S2MSI2A")
 
 toi<-as.Date("2020-07-17")+c(-1,0,1)
-sat_search(myplot,"S2MSI2A", dates = toi)
+rsat_search(myplot,"S2MSI2A", dates = toi)
 preview(myplot,dates=as.Date("2020-07-17"))
 ```
 
@@ -263,4 +263,3 @@ Your turn: We want you to search ([***do not download!***]{.ul}) a 2 cloud-free 
 ```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
 #TODO complete the exercise here
 ```
-

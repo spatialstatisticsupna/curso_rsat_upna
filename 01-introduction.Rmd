@@ -272,16 +272,18 @@ plot(navarre,'view',product = "MOD09GA")
 ```
 
 ```{r, eval=FALSE, echo=FALSE}
-unlink("Z:/CursoRSAT/regions/Navarre",recursive = TRUE)
+unlink("D:/CursoRSAT/regions/Navarre",recursive = TRUE)
 ```
 
 ------------------------------------------------------------------------
 
 ## Exercise
 
-Your turn: We want you to search ([***do not download!***]{.ul}) the multispectral images captured by Landsat-8 (`"LANDSAT_8_C1"`), Sentinel-2 (`"S2MSI2A"`) and MODIS (`"mod09ga"`) in Navarre during May $2019$. Try to do it with one single `rsat_search()` instruction. Use [***your own credentials***]{.ul} to check your access to the different data portals.
+Your turn: We want you to search ([***do not download!***]{.ul}) the multispectral images captured by Landsat-8 (`"LANDSAT_8_C1"`), Sentinel-2 (`"S2MSI2A"`) and MODIS (`"MOD09GA"`) in Navarre during May $2019$. Try to do it with one single `rsat_search()` instruction. Use [***your own credentials***]{.ul} to check your access to the different data portals.
 
 ```{r, eval=FALSE, echo=FALSE}
 
-
+rsat_search(region = navarre,
+           product = c("LANDSAT_8_C1","S2MSI2A","MOD09GA"),
+           dates = as.Date("2019-01-05") + 0:30)
 ```
