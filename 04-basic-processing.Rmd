@@ -32,6 +32,8 @@ set_credentials("rsat.package", "UpnaSSG.2021")
 Define the region of interest (`roi`) and the time of interest (`toi`). Here, `roi` is a bounding box around the Iberian peninsula and `toi` is a collection of dates of the end of meteorological event. This is the time when it is more likely to see the consequences of the storm:
 
 ```{r basic_roi_toi}
+library(sf)
+
 roi <- st_sf(st_as_sfc(st_bbox(c(
   xmin = -9.755859,
   xmax =  4.746094,
@@ -39,6 +41,8 @@ roi <- st_sf(st_as_sfc(st_bbox(c(
   ymax = 44.02201 
 ), crs = 4326)))
 
+library(mapview)
+mapview(roi)
 toi <- seq(as.Date("2021-01-10"),as.Date("2021-01-15"),1)
 ```
 
@@ -46,9 +50,9 @@ The polygon specifies a ***Coordinate Reference System (CRS)***. The CRS helps i
 
 Remember that an `rtoi` requires two paths; one for itself (`rt.path`) and another for its parental database (`db.path`):
 
-```{r basic_paths, eval=FALSE}
-db.path <- "F:/CursoRSAT/DATABASE"
-rt.path <- "F:/CursoRSAT/rtois"
+```{r basic_paths}
+db.path <- "D:/CursoRSAT/DATABASE"
+rt.path <- "D:/CursoRSAT/regions"
 dir.create(db.path, recursive = TRUE)
 dir.create(rt.path, recursive = TRUE)
 ```
@@ -63,8 +67,8 @@ filomena <- new_rtoi("filomena", roi, rt.path, db.path)
 
 MODIS spatio-temporal resolution (daily revisit and coarse resolution, see [here](https://drive.google.com/file/d/1cSw4LaTLPlGBHmG8v7uwH54f-m9jZz1N/view?usp=sharing)) might be suitable to explore the effects of Filomena in our ROI. Our task requires frequent images since snow melts quickly and clouds obstructing the view are frequent due to the storm and the season. Hence, search scenes of the [MOD09GA](https://lpdaac.usgs.gov/products/mod09gav006/) product:
 
-```{r basic_search, eval=FALSE}
-sat_search(region = filomena, product = c("mod09ga"), dates = toi)
+```{r basic_search, eval=TRUE}
+rsat_search(region = filomena, product = c("mod09ga"), dates = toi)
 print(filomena)
 ```
 
@@ -74,16 +78,18 @@ print(filomena)
 
 There are $24$ images concerning the Iberian peninsula during the $6$-day time span. Let's make sense of this results; first let's find the tiles intersecting the ROI;
 
-```{r basic_tiles_intersect, eval=FALSE}
+```{r basic_tiles_intersect, eval=TRUE}
+sf_use_s2(FALSE)
 library(rsatExtra)
 data("modis_tiles")
-roi.sinu <- st_transform(roi, crs(modis_tiles))
-tile.roi <- modis_tiles[roi.sinu,]
+#roi.sinu <- st_transform(roi, crs(modis_tiles))
+#tile.roi <- modis_tiles[roi.sinu,]
+tile.roi <- modis_tiles[roi,]
 ```
 
 Inspect `tile.roi` with the following instructions;
 
-```{r basic_tiles_show, eval=FALSE}
+```{r basic_tiles_show, eval=TRUE}
 library(tmap)
 tmap_mode("view")
 tm_shape(tile.roi) + tm_polygons(alpha = 0, border.col = "red")
@@ -104,7 +110,7 @@ plot(filomena, "preview")
 
 Let's pick the best images;
 
-```{r eval=FALSE}
+```{r}
 rcds <- records(filomena)
 dtes <- as.Date("2021-01-11") + 0:2
 rcds.f <- rcds[dates(rcds) %in% dtes]
@@ -115,8 +121,8 @@ records(filomena) <- rcds.f
 
 The final step of the review is the download of the satellite images:
 
-```{r, eval=FALSE}
-download(filomena)
+```{r}
+rsat_download(filomena)
 ```
 
 ------------------------------------------------------------------------
@@ -131,10 +137,10 @@ Tiles sometimes extend way beyond our area of interest. Also, It may happen that
 
 \<\center\>
 
-***Mosaicking*** means binding together the tiles for the same date, so there is a single image per day. The function `mosaic()` finds automatically the images from the same date. Additionally, the function crops around the `roi` of an `rtoi` to remove unnecessary information and save space on your hard disk drive.
+***Mosaicking*** means binding together the tiles for the same date, so there is a single image per day. The function `rsat_mosaic()` finds automatically the images from the same date. Additionally, the function crops around the `roi` of an `rtoi` to remove unnecessary information and save space on your hard disk drive.
 
-```{r, eval=FALSE}
-mosaic(filomena)
+```{r}
+rsat_mosaic(filomena)
 # plot(filomena,"mod09ga",xsize=500,ysize=500)
 ```
 
@@ -144,7 +150,7 @@ mosaic(filomena)
 
 #### Definition
 
-For any given material, the *reflectance* (remember the concept in Section \@ref(theory-images)) vary with the wavelength. Plotting wavelength vs. reflectance describes a characteristic curve that it is specific for each material. The curve is called ***spectral signature***. For instance, green vegetation absorbs red light due to chlorophyll and reflects *near-infrared* (*NIR*) due to structural tissues. This translates into lower reflectance values on the red band and higher reflectance values on the *NIR* band.
+For any given material, the *reflectance* (remember the concept in Section \@ref(theory-images)) vary with the wavelength. Plotting wavelength vs. reflectance describes a characteristic curve that is specific for each material. The curve is called ***spectral signature***. For instance, green vegetation absorbs red light due to chlorophyll and reflects *near-infrared* (*NIR*) due to structural tissues. This translates into lower reflectance values on the red band and higher reflectance values on the *NIR* band.
 
 <center>
 
@@ -162,7 +168,7 @@ $$ NDSI = \frac{Green - SWIR1}{Green + SWIR1}$$
 
 In `R` we can create a function replicating the calculation of the *NDSI:*
 
-```{r basic_ndsi, eval = FALSE}
+```{r basic_ndsi}
 NDSI = function(green, swir1){
   ndsi <- (green - swir1)/(green + swir1)
   return(ndsi)
@@ -173,24 +179,25 @@ A nice feature of `rsat` is that the indexes can specify the bands by their name
 
 ```{r basic_variables}
 show_variables()
+rsat_list_data(filomena) # execute on console to see table
 ```
 
 To use the `NDSI` function over the series of satellite images from the Iberian peninsula type;
 
-```{r basic_derive, eval = FALSE}
-derive(filomena, product = "mod09ga", variable = "ndsi", fun = NDSI)
+```{r basic_derive}
+rsat_derive(filomena, product = "mod09ga", variable = "ndsi", fun = NDSI)
 ```
 
-Import the results into `R` using the `get_raster()` function. The numbers must be truncated between $-1$ and $1$ to avoid values outside the feasible range (sun reflections on mirror-like surfaces, such as water, can lead to misleading results):
+Import the results into `R` using the `rsat_get_raster()` function. The numbers must be truncated between $-1$ and $1$ to avoid values outside the feasible range (sun reflections on mirror-like surfaces, such as water, can lead to misleading results):
 
-```{r basic_ndsi_import, eval = FALSE}
-ndsi.img <- get_raster(filomena, "mod09ga", "ndsi")
+```{r basic_ndsi_import}
+ndsi.img <- rsat_get_raster(filomena, p = "mod09ga", v = "ndsi")
 ndsi.img <- clamp(ndsi.img, -1, 1)
 ```
 
 Let's display one of the results:
 
-```{r basic_ndsi_plot, eval = FALSE}
+```{r basic_ndsi_plot}
 library(tmap)
 tm_shape(ndsi.img[[1]]) + tm_raster(style = "cont")
 ```
@@ -201,16 +208,16 @@ The *NDSI* index improves the separability between clouds and snow. However, the
 
 Some data providers apply algorithms over their data-sets to detect the presence of clouds (Level 1/2 products). The analysis is part of the quality assessment done during pre-processing and the results are included in the ***Quality Assurance*** (*QA*) band of the image. In addition to cloud coverage, the band provides information about over-saturated or filled pixels. The information is packed in this band using the bit format.
 
-The function `cloud_mask()` interprets the *QA* band to obtain images showing the presence/absence of clouds. Its application is straightforward;
+The function `rsat_cloudMask()` interprets the *QA* band to obtain images showing the presence/absence of clouds. Its application is straightforward;
 
-```{r basic_cloud, eval=FALSE}
-cloud_mask(filomena)
+```{r basic_cloud}
+rsat_cloudMask(filomena)
 ```
 
 For every image in the `rtoi`, the function generates a new image, called ***mask***, in which $1$s and $NA$s indicate clear and covered pixels. The function identifies the mission/program and applies the appropriate interpretation of bits to create the cloud mask. To import the result run;
 
-```{r basic_mask, eval = FALSE}
-clds.msk <- get_raster(filomena, "mod09ga", "CloudMask")
+```{r basic_mask}
+clds.msk <- rsat_get_raster(filomena, "mod09ga", "CloudMask")
 ```
 
 In MODIS, cloud-masks have a different resolution than the multispectral image. To adjust the resolution, *resample* the image (`resample()`) using the nearest neighbor method (`"ngb"`).

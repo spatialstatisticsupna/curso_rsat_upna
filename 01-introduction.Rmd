@@ -98,7 +98,7 @@ Tiling systems differ among programs/missions:
 
 The tiling systems mentioned above are available as polygons in `rsatExtra`. These polygons can be loaded and used to check the overlap between the *ROI* and the tiles. Let's display the sinusoidal tile grid system from MODIS;
 
-```{r, fig.align='center', fig.cap = "MODIS Tiling system"}
+```{r, fig.align='center', fig.cap = "MODIS Tiling system",eval=FALSE}
 library(rsatExtra)
 library(tmap)
 data("modis_tiles")
@@ -266,6 +266,7 @@ rsat_download(navarre)
 The function `rsat_mosaic()` binds images of the same date from different tiles whenever is required. It additionally crops the image around the *ROI*. The resulting color images can be plotted with `plot()`.
 
 ```{r warning=FALSE, cache=FALSE, cache.path="cache/"}
+library(tmap)
 rsat_mosaic(navarre)
 tmap_mode("plot")
 plot(navarre,'view',product = "MOD09GA")

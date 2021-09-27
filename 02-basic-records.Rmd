@@ -238,6 +238,7 @@ plot(galicia)
 The conversion from `sp` to `sf` can be done easily with only one function `st_as_sf`.
 
 ```{r, cache=FALSE ,eval=TRUE, cache.path="cache/"}
+library(sf)
 class(galicia)
 galicia<-st_as_sf(galicia)
 plot(galicia)

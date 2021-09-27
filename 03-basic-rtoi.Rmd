@@ -110,9 +110,9 @@ To create an `rtoi` object, 4 arguments must be used in the function new_rtoi:
 4.  db_path: the path where the images will be stored in their original form.
 
 ```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
-dir.create("D:/rsat/regions")
-dir.create("D:/rsat/DATABASE")
-madrid <-new_rtoi("madrid",madrid.sf,"D:/rsat/regions","D:/rsat/DATABASE")
+dir.create("D:/CursoRSAT/regions")
+dir.create("D:/CursoRSAT/DATABASE")
+madrid <-new_rtoi("madrid",madrid.sf,"D:/CursoRSAT/regions","D:/CursoRSAT/DATABASE")
 print(madrid)
 records(madrid) <- search.result
 print(madrid)
@@ -131,7 +131,7 @@ Additionally the rtoi object generates more folders to store the processed versi
 Every time we make a change on the rtoi, in addition to all the R sessions, the change has repercussions on the stored folder. This means that if at any time the R session is broken, the information is kept up to date. To be able to load the `rtoi` object again, you must use the function `read_rtoi`. This function only needs the address where the `rtoi` is located.
 
 ```{r, echo=FALSE, cache.path="cache/"}
-madrid <- read_rtoi("D:/rsat/regions/madrid")
+madrid <- read_rtoi("D:/CursoRSAT/regions/madrid")
 print(madrid)
 ```
 
@@ -236,7 +236,7 @@ This split object structure allows to have a common repository of images (the da
 
 With the raster package we can obtain entire regions and countries. However, if what we want is to select an irregular region on a map, it does not allow it. To do this, we can use an additional package called mapview.
 
-```{r, cache=TRUE ,eval=TRUE, cache.path="cache/"}
+```{r, cache=TRUE ,eval=FALSE, cache.path="cache/"}
 library(mapview);library(mapedit)
 my.special.region <- mapview() %>%
                      editMap()
